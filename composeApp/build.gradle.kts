@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -65,46 +64,6 @@ kotlin {
         }
     }
 }
-
-android {
-    namespace = "abika.sinau.chirp"
-    compileSdk = libs.versions.projectCompileSdkVersion.get().toInt()
-
-    defaultConfig {
-        applicationId = "abika.sinau.chirp"
-        minSdk = libs.versions.projectMinSdkVersion.get().toInt()
-        targetSdk = libs.versions.projectTargetSdkVersion.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
 dependencies {
     debugImplementation(compose.uiTooling)
-}
-
-compose.desktop {
-    application {
-        mainClass = "abika.sinau.chirp.MainKt"
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "abika.sinau.chirp"
-            packageVersion = "1.0.0"
-        }
-    }
 }
