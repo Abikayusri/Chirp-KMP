@@ -2,6 +2,7 @@ import abika.sinau.chirp.convention.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
+import kotlin.text.get
 
 class CmpFeatureConventionPlugin : Plugin<Project> {
 
@@ -13,7 +14,7 @@ class CmpFeatureConventionPlugin : Plugin<Project> {
 
             dependencies {
                 "commonMainImplementation"(project(":core:presentation"))
-                "commonMainImplementation"(project(":core:designsystem"))
+                "commonMainImplementation"(project(":core:design_system"))
 
                 "commonMainImplementation"(platform(libs.findLibrary("koin-bom").get()))
                 "androidMainImplementation"(platform(libs.findLibrary("koin-bom").get()))
@@ -26,9 +27,7 @@ class CmpFeatureConventionPlugin : Plugin<Project> {
                 "commonMainImplementation"(libs.findLibrary("jetbrains-lifecycle-viewmodel").get())
                 "commonMainImplementation"(libs.findLibrary("jetbrains-lifecycle-compose").get())
 
-                "commonMainImplementation"(
-                    libs.findLibrary("jetbrains-lifecycle-viewmodel-savedstate").get()
-                )
+                "commonMainImplementation"(libs.findLibrary("jetbrains-lifecycle-viewmodel-savedstate").get())
                 "commonMainImplementation"(libs.findLibrary("jetbrains-savedstate").get())
                 "commonMainImplementation"(libs.findLibrary("jetbrains-bundle").get())
                 "commonMainImplementation"(libs.findLibrary("jetbrains-compose-navigation").get())
