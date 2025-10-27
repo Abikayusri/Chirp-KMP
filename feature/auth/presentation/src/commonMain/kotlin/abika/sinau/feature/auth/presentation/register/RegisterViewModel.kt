@@ -1,21 +1,35 @@
 package abika.sinau.feature.auth.presentation.register
 
+import abika.sinau.core.domain.auth.AuthService
+import abika.sinau.core.domain.util.DataError
+import abika.sinau.core.domain.util.onFailure
+import abika.sinau.core.domain.util.onSuccess
 import abika.sinau.core.domain.validation.PasswordValidator
 import abika.sinau.core.presentation.util.UiText
+import abika.sinau.core.presentation.util.toUiText
 import abika.sinau.feature.auth.domain.EmailValidator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import chirp.feature.auth.presentation.generated.resources.Res
+import chirp.feature.auth.presentation.generated.resources.error_account_exists
 import chirp.feature.auth.presentation.generated.resources.error_invalid_email
 import chirp.feature.auth.presentation.generated.resources.error_invalid_password
 import chirp.feature.auth.presentation.generated.resources.error_invalid_username
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(
+    private val authService: AuthService
+) : ViewModel() {
+
+    private val eventChannel = Channel<RegisterEvent>()
+    val events = eventChannel.receiveAsFlow()
 
     private var hasLoadedInitialData = false
 
@@ -40,7 +54,70 @@ class RegisterViewModel : ViewModel() {
                 validateFormInputs()
             }
 
+            RegisterAction.OnRegisterClick -> register()
+            RegisterAction.OnTogglePasswordVisibilityClick -> {
+                _state.update {
+                    it.copy(
+                        isPasswordVisible = !it.isPasswordVisible
+                    )
+                }
+            }
+
             else -> {}
+        }
+    }
+
+    private fun register() {
+        if (validateFormInputs()) {
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update {
+                it.copy(isRegistering = true)
+            }
+
+            val email = state.value.emailTextState.text.toString()
+            val username = state.value.usernameTextState.text.toString()
+            val password = state.value.passwordTextState.text.toString()
+
+            authService
+                .register(
+                    email = email,
+                    username = username,
+                    password = password
+                )
+                .onSuccess {
+                    _state.update {
+                        it.copy(
+                            isRegistering = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    val registrationError = when (error) {
+                        DataError.Remote.CONFLICT -> UiText.Resource(Res.string.error_account_exists)
+                        else -> error.toUiText()
+                    }
+
+                    _state.update {
+                        it.copy(
+                            isRegistering = false,
+                            registrationError = registrationError
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun clearAllTextFieldErrors() {
+        _state.update {
+            it.copy(
+                emailError = null,
+                usernameError = null,
+                passwordError = null,
+                registrationError = null,
+            )
         }
     }
 
@@ -56,34 +133,25 @@ class RegisterViewModel : ViewModel() {
         val passwordValidationState = PasswordValidator.validate(password)
         val isUsernameValid = username.length in 3..20
 
-        val emailError = if(!isEmailValid) {
+        val emailError = if (!isEmailValid) {
             UiText.Resource(Res.string.error_invalid_email)
         } else null
-        val usernameError = if(!isUsernameValid) {
+        val usernameError = if (!isUsernameValid) {
             UiText.Resource(Res.string.error_invalid_username)
         } else null
-        val passwordError = if(!passwordValidationState.isValidPassword) {
+        val passwordError = if (!passwordValidationState.isValidPassword) {
             UiText.Resource(Res.string.error_invalid_password)
         } else null
 
-        _state.update { it.copy(
-            emailError = emailError,
-            usernameError = usernameError,
-            passwordError = passwordError
-        ) }
+        _state.update {
+            it.copy(
+                emailError = emailError,
+                usernameError = usernameError,
+                passwordError = passwordError
+            )
+        }
 
         return isUsernameValid && isEmailValid && passwordValidationState.isValidPassword
 
-    }
-
-    private fun clearAllTextFieldErrors() {
-        _state.update {
-            it.copy(
-                emailError = null,
-                usernameError = null,
-                passwordError = null,
-                registrationError = null,
-            )
-        }
     }
 }

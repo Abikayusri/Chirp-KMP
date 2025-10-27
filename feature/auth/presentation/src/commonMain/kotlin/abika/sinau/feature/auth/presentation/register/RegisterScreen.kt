@@ -8,6 +8,7 @@ import abika.sinau.core.design_system.components.layouts.ChirpSnackbarScaffold
 import abika.sinau.core.design_system.components.textfileds.ChirpPasswordTextField
 import abika.sinau.core.design_system.components.textfileds.ChirpTextField
 import abika.sinau.core.design_system.theme.ChirpTheme
+import abika.sinau.core.presentation.util.ObserveAsEvents
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,9 +36,20 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
 @Composable
-fun RegisterRoot(viewModel: RegisterViewModel = viewModel()) {
+fun RegisterRoot(
+    viewModel: RegisterViewModel = viewModel(),
+    onRegisterSuccess: (String) -> Unit
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    ObserveAsEvents(viewModel.events) { event ->
+        when(event) {
+            is RegisterEvent.Success -> {
+                onRegisterSuccess(event.email)
+            }
+        }
+    }
 
     RegisterScreen(
         state = state,
@@ -98,7 +110,7 @@ fun RegisterScreen(
                     onAction(RegisterAction.OnInputTextFocusGain)
                 },
                 onToggleVisibilityClick = {
-                    onAction(RegisterAction.onToggleVisibilityClick)
+                    onAction(RegisterAction.OnTogglePasswordVisibilityClick)
                 },
                 isPasswordVisible = state.isPasswordVisible
             )
