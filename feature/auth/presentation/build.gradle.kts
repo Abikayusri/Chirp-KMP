@@ -14,6 +14,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
+                implementation(libs.bundles.koin.common)
                 // Add KMP dependencies here
 
                 implementation(projects.core.domain)
